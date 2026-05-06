@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+/* ─── Design tokens ──────────────────────────────────────────────────────── */
+/*
+  Tailwind v4 reads @theme to generate utility classes.
+  --color-* → text-*, bg-*, border-* utilities
+  --font-*  → font-* utilities
+*/
+@theme {
+  /* Phosphor green ramp — warm olive cast, not harsh terminal green */
+  --color-green-bright:  #c8f542;   /* headline, active elements */
+  --color-green-mid:     #8ab82a;   /* button text, nav labels    */
+  --color-green-dim:     #567a18;   /* secondary text, borders    */
+  --color-green-faint:   #2e4a0a;   /* tertiary labels, grid      */
+  --color-green-glow:    #c8f54233; /* phosphor glow (semi-trans) */
+
+  /* Purple accent — instrument UI chrome (grid lines, indices, scope labels) */
+  --color-purple-mid:    #5a3890;   /* readable chrome labels             */
+  --color-purple-dim:    #321d55;   /* grid lines, borders, [01] numbers  */
+  --color-purple-faint:  #180d2e;   /* very subtle panel tints            */
+
+  /* Backgrounds — nested screen effect */
+  --color-bg-page:       #0a0f04;   /* outermost background       */
+  --color-bg-screen:     #080c03;   /* oscilloscope / inner panel */
+  --color-bg-overlay:    #0d1405;   /* slightly lighter panel     */
+
+  /* Fonts */
+  --font-vt323:          'VT323', monospace;
+  --font-press-start:    'Press Start 2P', monospace;
+}
+
+/* ─── Base reset ─────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-bg-page);
+  color: var(--color-green-mid);
+  font-family: var(--font-vt323);
+  overflow-x: hidden;
+}
+
+/* ─── CRT scanlines ──────────────────────────────────────────────────────── */
+/*
+  A fixed ::after on body lays a repeating-linear-gradient over everything.
+  pointer-events: none means it never blocks clicks.
+  Opacity kept low (0.06) so it reads as texture, not effect.
+*/
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.06) 2px,
+    rgba(0, 0, 0, 0.06) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* ─── CRT vignette ───────────────────────────────────────────────────────── */
+/*
+  A second fixed layer adds a soft radial darkening at the screen edges —
+  the natural light falloff of a CRT tube.
+*/
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 55%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+  pointer-events: none;
+  z-index: 99;
+}
+
+/* ─── Phosphor glow utility ──────────────────────────────────────────────── */
+/*
+  Applied manually to the headline and key bright elements.
+  Layered text-shadow reads like phosphor afterglow.
+*/
+.glow {
+  text-shadow:
+    0 0 8px var(--color-green-bright),
+    0 0 24px var(--color-green-glow),
+    0 0 48px var(--color-green-glow);
+}
+
+.glow-dim {
+  text-shadow:
+    0 0 6px var(--color-green-mid),
+    0 0 16px var(--color-green-glow);
+}
+
+/* ─── Cursor blink ───────────────────────────────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: blink 1.1s step-end infinite;
+}
+
+/* ─── Phosphor flicker (very subtle) ────────────────────────────────────── */
+@keyframes flicker {
+  0%   { opacity: 1;    }
+  92%  { opacity: 1;    }
+  93%  { opacity: 0.92; }
+  94%  { opacity: 1;    }
+  96%  { opacity: 0.95; }
+  100% { opacity: 1;    }
+}
+
+.flicker {
+  animation: flicker 6s ease-in-out infinite;
+}
