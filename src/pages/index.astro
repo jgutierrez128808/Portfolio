@@ -14,16 +14,16 @@ import Layout from '../layouts/Layout.astro';
 
     <!-- ── 2. Name / title block ─────────────────────────────────── -->
     <section class="name-block">
-      <p class="prompt">&gt; HELLO_</p>
-      <h1 class="headline glow">JACOB GUTIERREZ</h1>
-      <p class="tagline">EE &nbsp;·&nbsp; MUSICIAN &nbsp;·&nbsp; SYNTH BUILDER</p>
+      <p id="hello-prompt" class="prompt"></p>
+      <h1 id="headline" class="headline glow"></h1>
+      <p class="tagline boot-elem">EE &nbsp;·&nbsp; MUSICIAN &nbsp;·&nbsp; SYNTH BUILDER</p>
     </section>
 
     <!-- ── 3. Oscilloscope ───────────────────────────────────────── -->
-    <section class="scope-wrap">
+    <section class="scope-wrap boot-elem">
       <div class="scope-header">
         <span>SCOPE.OUT // X-Y MODE</span>
-        <span>● IDLE</span>
+        <span class="idle-indicator">● IDLE</span>
       </div>
       <div class="scope-display">
         <canvas id="lissajous"></canvas>
@@ -32,19 +32,19 @@ import Layout from '../layouts/Layout.astro';
 
     <!-- ── 4. Navigation ─────────────────────────────────────────── -->
     <section class="nav-section">
-      <p class="prompt">&gt; SELECT_</p>
+      <p id="select-prompt" class="prompt boot-elem"></p>
       <nav class="nav-grid">
-        <a href="/music" class="nav-card">
+        <a href="/music" class="nav-card boot-elem">
           <span class="nav-num">[01]</span>
           <span class="nav-name">MUSIC</span>
           <span class="nav-sub">listen / liner notes</span>
         </a>
-        <a href="/instruments" class="nav-card">
+        <a href="/instruments" class="nav-card boot-elem">
           <span class="nav-num">[02]</span>
           <span class="nav-name">INSTRUMENTS</span>
           <span class="nav-sub">original builds</span>
         </a>
-        <a href="/lab" class="nav-card">
+        <a href="/lab" class="nav-card boot-elem">
           <span class="nav-num">[03]</span>
           <span class="nav-name">LAB</span>
           <span class="nav-sub">notes / experiments</span>
@@ -53,8 +53,8 @@ import Layout from '../layouts/Layout.astro';
     </section>
 
     <!-- ── 5. Footer ─────────────────────────────────────────────── -->
-    <div class="rule"></div>
-    <footer class="footer-bar">
+    <div id="footer-rule" class="rule boot-elem"></div>
+    <footer class="footer-bar boot-elem">
       <span>&gt; PRESS ANY KEY</span>
       <span class="cursor-blink">█</span>
     </footer>
@@ -70,6 +70,9 @@ import Layout from '../layouts/Layout.astro';
 -->
 <script>
   import gsap from 'gsap';
+  import { TextPlugin } from 'gsap/TextPlugin';
+
+  gsap.registerPlugin(TextPlugin);
 
   const canvas = document.getElementById('lissajous') as HTMLCanvasElement;
   const ctx = canvas.getContext('2d')!;
@@ -78,12 +81,6 @@ import Layout from '../layouts/Layout.astro';
     canvas.width  = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
   }
-
-  // ResizeObserver fires as soon as the canvas has real layout dimensions —
-  // even on the very first paint. This fixes the blank-on-first-load bug
-  // caused by clientWidth/Height being 0 before the browser finishes layout.
-  const ro = new ResizeObserver(() => syncSize());
-  ro.observe(canvas);
 
   // Phase drifts slowly — full 2π cycle takes ~70 seconds at 30 fps.
   let phase = Math.PI / 4; // start at a visually pleasant angle (oval shape)
@@ -102,7 +99,7 @@ import Layout from '../layouts/Layout.astro';
 
     // ── Grid crosshairs ────────────────────────────────────────────
     ctx.save();
-    ctx.strokeStyle = 'rgba(50, 29, 85, 0.75)';
+    ctx.strokeStyle = 'rgba(45, 74, 31, 0.65)'; /* --phosphor-trace */
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(cx, 10);   ctx.lineTo(cx, h - 10);
@@ -123,8 +120,8 @@ import Layout from '../layouts/Layout.astro';
       ctx.save();
       ctx.globalAlpha   = alpha;
       ctx.shadowBlur    = blur;
-      ctx.shadowColor   = '#c8f542';
-      ctx.strokeStyle   = '#c8f542';
+      ctx.shadowColor   = '#c8f0a8'; /* --phosphor-bright */
+      ctx.strokeStyle   = '#c8f0a8';
       ctx.lineWidth     = lw;
       ctx.lineJoin      = 'round';
       ctx.beginPath();
@@ -142,13 +139,60 @@ import Layout from '../layouts/Layout.astro';
     }
   }
 
-  // GSAP ticker drives the animation at a steady 30 fps.
-  // gsap.ticker.fps sets a cap so we're not burning cycles on a 144 Hz screen.
-  gsap.ticker.fps(30);
-  gsap.ticker.add(() => {
-    phase += 0.003;
-    draw();
+  // requestAnimationFrame is guaranteed to fire after the browser has computed
+  // layout but before the next paint — so clientWidth/Height are always real
+  // numbers here, never 0. This is more reliable than ResizeObserver for the
+  // initial sizing, which can fire before layout is complete.
+  requestAnimationFrame(() => {
+    syncSize();
+
+    // ── Typewriter sequence ──────────────────────────────────────────
+    // sessionStorage persists across page navigations within the same tab
+    // but clears when the tab is closed — perfect for a one-time intro.
+    const introPlayed = sessionStorage.getItem('intro-played');
+
+    if (introPlayed) {
+      // Return visit: populate text and show everything instantly.
+      document.getElementById('hello-prompt')!.textContent = '> HELLO_';
+      document.getElementById('headline')!.textContent = 'JACOB GUTIERREZ';
+      document.getElementById('select-prompt')!.textContent = '> SELECT_';
+      gsap.set('.boot-elem', { opacity: 1 });
+    } else {
+      // First visit: boot sequence.
+      const tl = gsap.timeline({ delay: 0.2 });
+
+      tl
+        // Type the greeting and name
+        .to('#hello-prompt', { duration: 0.5, text: '> HELLO_', ease: 'none' })
+        .to('#headline', { duration: 1.2, text: 'JACOB GUTIERREZ', ease: 'none' }, '+=0.1')
+
+        // Tagline and scope fade in as a pair — slight overlap so they feel
+        // like one sweep of content rather than two separate beats
+        .to('.tagline', { opacity: 1, duration: 0.4, ease: 'power2.out' }, '+=0.15')
+        .to('.scope-wrap', { opacity: 1, duration: 0.5, ease: 'power2.out' }, '-=0.2')
+
+        // Nav section: > SELECT_ types, then cards stagger in
+        .set('#select-prompt', { opacity: 1 }, '+=0.25')
+        .to('#select-prompt', { duration: 0.35, text: '> SELECT_', ease: 'none' })
+        .to('.nav-card', { opacity: 1, duration: 0.25, stagger: 0.1, ease: 'power1.out' }, '+=0.05')
+
+        // Footer appears last
+        .to(['#footer-rule', '.footer-bar'], { opacity: 1, duration: 0.3 }, '+=0.08');
+
+      sessionStorage.setItem('intro-played', 'true');
+    }
+
+    // ── Lissajous ticker ────────────────────────────────────────────
+    gsap.ticker.fps(30);
+    gsap.ticker.add(() => {
+      phase += 0.003;
+      draw();
+    });
   });
+
+  // ResizeObserver handles window resizes after the initial load.
+  const ro = new ResizeObserver(() => syncSize());
+  ro.observe(canvas);
 </script>
 
 <style>
@@ -156,6 +200,11 @@ import Layout from '../layouts/Layout.astro';
     Astro scopes <style> blocks to this component automatically —
     these class names won't collide with anything on other pages.
   */
+
+  /* Elements hidden at page load; revealed by the boot sequence timeline. */
+  .boot-elem {
+    opacity: 0;
+  }
 
   .site-frame {
     display: flex;
@@ -170,7 +219,7 @@ import Layout from '../layouts/Layout.astro';
     display: flex;
     justify-content: space-between;
     font-size: 15px;
-    color: var(--color-green-dim);
+    color: var(--phosphor-dim);
     letter-spacing: 0.12em;
     padding-bottom: 10px;
   }
@@ -178,7 +227,7 @@ import Layout from '../layouts/Layout.astro';
   .rule {
     width: 100%;
     height: 1px;
-    background: var(--color-purple-dim);
+    background: var(--phosphor-trace);
     flex-shrink: 0;
   }
 
@@ -189,7 +238,7 @@ import Layout from '../layouts/Layout.astro';
 
   .prompt {
     font-size: 18px;
-    color: var(--color-green-dim);
+    color: var(--phosphor-dim);
     letter-spacing: 0.1em;
     margin-bottom: 6px;
   }
@@ -197,18 +246,17 @@ import Layout from '../layouts/Layout.astro';
   .headline {
     font-family: var(--font-press-start);
     font-size: clamp(14px, 1.8vw, 28px);
-    color: var(--color-green-bright);
+    color: var(--phosphor-peak);
     line-height: 1.3;
     margin-bottom: 14px;
-    /* Tighter glow — visible but not blown out */
     text-shadow:
-      0 0 6px var(--color-green-bright),
-      0 0 16px var(--color-green-glow);
+      0 0 6px var(--phosphor-bright),
+      0 0 16px var(--phosphor-glow);
   }
 
   .tagline {
     font-size: 22px;
-    color: var(--color-green-dim);
+    color: var(--phosphor-dim);
     letter-spacing: 0.28em;
   }
 
@@ -217,8 +265,8 @@ import Layout from '../layouts/Layout.astro';
     height: 280px;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--color-purple-dim);
-    background: var(--color-bg-screen);
+    border: 1px solid var(--phosphor-trace);
+    background: var(--bg-deepest);
     margin-bottom: 32px;
   }
 
@@ -227,10 +275,14 @@ import Layout from '../layouts/Layout.astro';
     justify-content: space-between;
     padding: 7px 14px;
     font-size: 14px;
-    color: var(--color-green-dim);
+    color: var(--phosphor-dim);
     letter-spacing: 0.1em;
-    border-bottom: 1px solid var(--color-purple-dim);
+    border-bottom: 1px solid var(--phosphor-trace);
     flex-shrink: 0;
+  }
+
+  .idle-indicator {
+    color: var(--amber-active);
   }
 
   .scope-display {
@@ -263,32 +315,37 @@ import Layout from '../layouts/Layout.astro';
     flex-direction: column;
     gap: 5px;
     padding: 14px 16px;
-    border: 1px solid var(--color-green-faint);
+    border: 1px solid var(--phosphor-trace);
     text-decoration: none;
     transition: border-color 0.12s, background-color 0.12s;
   }
 
   .nav-card:hover {
-    border-color: var(--color-green-dim);
-    background-color: rgba(46, 74, 10, 0.18);
+    border-color: var(--amber-active);
+    background-color: rgba(240, 160, 48, 0.06);
+  }
+
+  .nav-card:hover .nav-name {
+    color: var(--amber-active);
   }
 
   .nav-num {
     font-size: 14px;
-    color: var(--color-purple-mid);
+    color: var(--phosphor-dim);
     letter-spacing: 0.08em;
   }
 
   .nav-name {
     font-family: var(--font-press-start);
     font-size: clamp(9px, 1.1vw, 13px);
-    color: var(--color-green-bright);
+    color: var(--phosphor-bright);
     line-height: 1.5;
+    transition: color 0.12s;
   }
 
   .nav-sub {
     font-size: 17px;
-    color: var(--color-green-dim);
+    color: var(--phosphor-dim);
     letter-spacing: 0.05em;
   }
 
@@ -299,7 +356,7 @@ import Layout from '../layouts/Layout.astro';
     align-items: center;
     padding-top: 10px;
     font-size: 16px;
-    color: var(--color-green-dim);
+    color: var(--phosphor-dim);
     letter-spacing: 0.1em;
     flex-shrink: 0;
   }

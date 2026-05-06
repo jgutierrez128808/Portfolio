@@ -7,26 +7,25 @@
   --font-*  → font-* utilities
 */
 @theme {
-  /* Phosphor green ramp — warm olive cast, not harsh terminal green */
-  --color-green-bright:  #c8f542;   /* headline, active elements */
-  --color-green-mid:     #8ab82a;   /* button text, nav labels    */
-  --color-green-dim:     #567a18;   /* secondary text, borders    */
-  --color-green-faint:   #2e4a0a;   /* tertiary labels, grid      */
-  --color-green-glow:    #c8f54233; /* phosphor glow (semi-trans) */
+  /* ── Backgrounds ──────────────────────────────────────────────── */
+  --bg-base:          #0d1409;   /* main page background                  */
+  --bg-deepest:       #050a04;   /* nested screens: scope, code, embeds   */
 
-  /* Purple accent — instrument UI chrome (grid lines, indices, scope labels) */
-  --color-purple-mid:    #5a3890;   /* readable chrome labels             */
-  --color-purple-dim:    #321d55;   /* grid lines, borders, [01] numbers  */
-  --color-purple-faint:  #180d2e;   /* very subtle panel tints            */
+  /* ── Phosphor green ramp (~85% of visible color) ─────────────── */
+  --phosphor-peak:    #e8ffd0;   /* max brightness: headline, active trace */
+  --phosphor-bright:  #c8f0a8;   /* buttons, important data, Lissajous     */
+  --phosphor-mid:     #7fb86e;   /* body text, secondary labels            */
+  --phosphor-dim:     #5a8048;   /* tertiary labels, prompts, borders      */
+  --phosphor-trace:   #2d4a1f;   /* grid lines, structural borders         */
+  --phosphor-glow:    #c8f0a833; /* phosphor glow (semi-transparent)       */
 
-  /* Backgrounds — nested screen effect */
-  --color-bg-page:       #0a0f04;   /* outermost background       */
-  --color-bg-screen:     #080c03;   /* oscilloscope / inner panel */
-  --color-bg-overlay:    #0d1405;   /* slightly lighter panel     */
+  /* ── Amber accent (~5% of visible color — triggered states only) */
+  --amber-active:     #f0a030;   /* hover, active indicators, alerts       */
+  --amber-dim:        #80502d;   /* amber elements at rest                 */
 
-  /* Fonts */
-  --font-vt323:          'VT323', monospace;
-  --font-press-start:    'Press Start 2P', monospace;
+  /* ── Fonts ────────────────────────────────────────────────────── */
+  --font-vt323:       'VT323', monospace;
+  --font-press-start: 'Press Start 2P', monospace;
 }
 
 /* ─── Base reset ─────────────────────────────────────────────────────────── */
@@ -42,8 +41,8 @@ html,
 body {
   width: 100%;
   height: 100%;
-  background-color: var(--color-bg-page);
-  color: var(--color-green-mid);
+  background-color: var(--bg-base);
+  color: var(--phosphor-mid);
   font-family: var(--font-vt323);
   overflow-x: hidden;
 }
@@ -94,15 +93,15 @@ body::before {
 */
 .glow {
   text-shadow:
-    0 0 8px var(--color-green-bright),
-    0 0 24px var(--color-green-glow),
-    0 0 48px var(--color-green-glow);
+    0 0 8px var(--phosphor-bright),
+    0 0 24px var(--phosphor-glow),
+    0 0 48px var(--phosphor-glow);
 }
 
 .glow-dim {
   text-shadow:
-    0 0 6px var(--color-green-mid),
-    0 0 16px var(--color-green-glow);
+    0 0 6px var(--phosphor-mid),
+    0 0 16px var(--phosphor-glow);
 }
 
 /* ─── Cursor blink ───────────────────────────────────────────────────────── */
